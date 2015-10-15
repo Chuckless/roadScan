@@ -116,7 +116,7 @@ public class DataReader implements Runnable{
                                         trigger = 0;
                                         Log.d("DataReader", "TRIGGER!");
                                     }
-                                }else{
+                                }else ifgit add{
                                     trigger = 0;
 
                                 }
