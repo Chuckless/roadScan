@@ -33,6 +33,7 @@ public class CheckConnection {
 
     private CheckConnection (final Context context){
         mContext = context;
+        isConnected();
     }
 
     public synchronized  void killInstance(){
@@ -44,7 +45,7 @@ public class CheckConnection {
         r = new Runnable(){
             @Override
             public void run() {
-                Log.d("conec", "CheckConnection executado");
+                Log.d("conec", "CheckConnection inicializado");
                 handler.postDelayed(this, Constants.CCSeconds * 1000);
                 ConnectivityManager cm = (ConnectivityManager)mContext.getSystemService(mContext.CONNECTIVITY_SERVICE);
                 NetworkInfo[] netInfo = cm.getAllNetworkInfo();
@@ -59,6 +60,7 @@ public class CheckConnection {
                         else{
                             if(haveConnectedMobile == true){
                                 haveConnectedMobile = false;
+
                                 Log.d("conec", "Desconectou 3G");
                             }
 
@@ -69,8 +71,7 @@ public class CheckConnection {
                                 haveConnectedWifi = true;
                                 Log.d("conec", "Conectou Wifi");
                             }
-                        }
-                        else{
+                        }else{
                             if(haveConnectedWifi == true){
                                 haveConnectedWifi = false;
                                 Log.d("conec", "Desconectou Wifi");
@@ -83,7 +84,10 @@ public class CheckConnection {
     }
 
     public void stopChecking(){
-        handler.removeCallbacks(r);
+        if(handler != null) {
+            handler.removeCallbacks(r);
+            Log.d("conec", "Terminando serviço de checagem de conexao");
+        }
     }
 
     public Handler getHandler() {
@@ -108,6 +112,10 @@ public class CheckConnection {
 
     public void setmContext(Context mContext) {
         this.mContext = mContext;
+    }
+
+    public boolean haveInternet(){
+        return isHaveConnectedMobile() | isHaveConnectedWifi();
     }
 
     public boolean isHaveConnectedMobile() {

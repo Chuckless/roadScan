@@ -8,7 +8,24 @@ import android.view.View;
  */
 public interface ScreenUpdaterInterface {
 
-    public void Toaster(String string);
-    public void updateMeanTV(String string);
-    public void updateDevTV(String string);
+    void Toaster(String string);
+
+    void updateDistTV(String string);
+    void updateSpeedTV(String string);
+
+    void updateCountTV(String string);
+    void updateUploadedTV(String string);
+
+    void updateDevTV(String string);
+
+    void updateGPSTV(String string);
+    void updateRunning(String string);
+
+    void updateDevMean(String string);
+    void updateColor(int color);
+
+
+
+
+
 }

@@ -10,7 +10,9 @@ package com.example.lucas.roadscan;
         import java.io.InputStream;
         import java.io.InputStreamReader;
         import java.io.UnsupportedEncodingException;
+        import java.net.SocketTimeoutException;
         import java.util.List;
+        import java.util.concurrent.ConcurrentSkipListMap;
 
         import org.apache.http.HttpEntity;
         import org.apache.http.HttpResponse;
@@ -35,10 +37,11 @@ package com.example.lucas.roadscan;
         import android.util.Log;
         import android.widget.Toast;
 
+        import com.example.lucas.roadscan.Singleton.Constants;
+
 public class JSONParser {
 
     static InputStream is = null;
-    static JSONObject jObj = null;
     static String json = "";
 
     // constructor
@@ -56,7 +59,7 @@ public class JSONParser {
         try {
 
             // check for request method
-            if(method == "POST"){
+            if(method.equals("POST")){
                 Log.d("JSONParser", "Metodo POST");
                 // request method is POST
 
@@ -70,11 +73,11 @@ public class JSONParser {
                 //httpPost.setEntity(new UrlEncodedFormEntity(params));
 
 
-               /* HttpParams httpParameters = new BasicHttpParams();
-                HttpConnectionParams.setConnectionTimeout(httpParameters, 1000);
-                HttpConnectionParams.setSoTimeout(httpParameters, 3000);*/
+                HttpParams httpParameters = new BasicHttpParams();
+                HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+                HttpConnectionParams.setSoTimeout(httpParameters, 5000);
 
-                //httpClient = new DefaultHttpClient(httpParameters);
+                httpClient = new DefaultHttpClient(httpParameters);
 
                 try{
                     HttpResponse httpResponse = httpClient.execute(httpPost);
@@ -86,12 +89,22 @@ public class JSONParser {
                     Log.d("JSONParser", "httpPost: "+ httpPost);
                     Log.d("JSONParser", "httpResponse: "+ httpResponse);
                     Log.d("JSONParser", "httpEntity: "+ httpEntity);
-                    Log.d("JSONParser", "is: "+is);
+                    Log.d("JSONParser", "is: "+ is);
                 }catch (ConnectTimeoutException e) {
                     //Here Connection TimeOut excepion
-                    Log.d("JSONParser", "timeout!");
+                    Log.d("JSONParser", "timed out!");
+                    Constants.timeOuts++;
+                    Constants.success = 0;
+                    return null;
+                }catch(NullPointerException e){
+                    Log.d("JSONParser", "sem resposta do servidor");
+                    Constants.success = 0;
+                }catch(SocketTimeoutException e){
+                    Constants.timeOuts++;
+                    Constants.success = 0;
+                    return null;
                 }
-            }else if(method == "GET"){
+            }else if(method.equals("GET")){
                 // request method is GET
                 DefaultHttpClient httpClient = new DefaultHttpClient();
                 //String paramString = URLEncodedUtils.format(params, "utf-8");

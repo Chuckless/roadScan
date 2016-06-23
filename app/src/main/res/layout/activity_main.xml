@@ -1,172 +1,219 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/LinearLayout1"
+    android:id="@+id/colorLayout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
     android:weightSum="1">
 
-    <Button
-        android:id="@+id/btnStartService"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:onClick="startService"
-        android:text="@string/start_service"
-        android:layout_rowSpan="2" />
-
-    <Button
-        android:id="@+id/btnStopService"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:onClick="stopService"
-        android:text="@string/stop_service" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Ip                  "
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <EditText
-            android:id="@+id/editIp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="Ip Address" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.43"
-            android:text="RowLimit  "
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <EditText
-            android:id="@+id/editRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.43"
-            android:ems="10"
-            android:hint="RowLimit" >
-
-            <requestFocus />
-        </EditText>
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/changeBtn"
+    <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Change Values" />
+        android:id="@+id/scrollView" >
 
-    <Switch
-        android:id="@+id/switch1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:text="Show Values" />
-
-    <GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="2" >
-
-        <TextView
-            android:id="@+id/textLat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:text="Lat: "
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <TextView
-            android:id="@+id/textLng"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_row="0"
-            android:text="Lng: "
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    </GridLayout>
-
-    <GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="2" >
-
-        <TextView
-            android:id="@+id/textDist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:text="Dist:"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <TextView
-            android:id="@+id/textSpeed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_row="0"
-            android:text="Speed:"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-    </GridLayout>
-
-    <GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="2"
-        android:layout_gravity="center_horizontal">
-
-        <TextView
-            android:id="@+id/textCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:text="DBCount:"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <TextView
-            android:id="@+id/textUploaded"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_row="0"
-            android:text="Uploaded:"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-    </GridLayout>
-
-    <TableLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"></TableLayout>
-
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Delete Stored Data"
-            android:id="@+id/btnUpload"
-            android:layout_gravity="bottom" />
-    </TableRow>
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/btnStartService"
+                    android:layout_width="182dp"
+                    android:layout_height="wrap_content"
+                    android:onClick="startService"
+                    android:text="@string/start_service"
+                    android:layout_rowSpan="2" />
+
+                <Button
+                    android:id="@+id/btnStopService"
+                    android:layout_width="181dp"
+                    android:layout_height="wrap_content"
+                    android:onClick="stopService"
+                    android:text="@string/stop_service" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Service not running"
+                android:id="@+id/textRunning" />
+
+            <Switch
+                android:id="@+id/switch1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Debug Mode" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="525dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:id="@+id/textAvgspeed"
+                        android:layout_width="121dp"
+                        android:layout_height="wrap_content"
+                        android:text="Min Speed"
+                        android:textAppearance="?android:attr/textAppearanceLarge"
+                        android:autoText="false" />
+
+                    <EditText
+                        android:id="@+id/editSpd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="Minimum Speeed"
+                        android:layout_weight="1.8" />
+
+                    <Button
+                        android:id="@+id/changeBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:text="Ok"
+                        android:layout_weight="0.66" />
+                </LinearLayout>
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Upload Data"
+                    android:id="@+id/check_upload"
+                    android:checked="true"
+                    android:clickable="true" />
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Save TXT"
+                    android:id="@+id/check_txt"
+                    android:checked="false"
+                    android:clickable="true" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:weightSum="1">
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2" >
+
+                        <TextView
+                            android:id="@+id/textDist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="Dist:"
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                        <TextView
+                            android:id="@+id/textSpeed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_column="1"
+                            android:layout_gravity="center_horizontal|top"
+                            android:layout_row="0"
+                            android:text="Speed:"
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+                    </GridLayout>
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:layout_gravity="center_horizontal">
+
+                        <TextView
+                            android:id="@+id/textCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:text="Banco:"
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                        <TextView
+                            android:id="@+id/textUploaded"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_column="1"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_row="0"
+                            android:text="Processed:"
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+                    </GridLayout>
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:layout_gravity="center_horizontal" >
+
+                        <TextView
+                            android:id="@+id/textDev"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_column="0"
+                            android:layout_row="0"
+                            android:text="StdDev:"
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:text="StdvMean"
+                            android:id="@+id/textDevMean"
+                            android:layout_column="1"
+                            android:layout_row="0"
+                            android:layout_gravity="center_horizontal" />
+                    </GridLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceLarge"
+                        android:text="Status: "
+                        android:id="@+id/textGPS" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom">
+
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Delete Data"
+                        android:id="@+id/btnDelete"
+                        android:clickable="true"
+                        android:enabled="true" />
+
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
 
 </LinearLayout>

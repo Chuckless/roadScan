@@ -5,7 +5,6 @@ package com.example.lucas.roadscan;
  */
 import android.content.Context;
 import android.location.Location;
-import android.provider.ContactsContract;
 import android.util.Log;
 
 import com.example.lucas.roadscan.InterfaceUpdate.ScreenUpdater;
@@ -13,274 +12,387 @@ import com.example.lucas.roadscan.InterfaceUpdate.ScreenUpdaterInterface;
 import com.example.lucas.roadscan.Processing.DataTreatment;
 import com.example.lucas.roadscan.Singleton.Constants;
 import com.example.lucas.roadscan.Singleton.DataContainer;
-import com.example.lucas.roadscan.Singleton.GPS;
 import com.example.lucas.roadscan.Singleton.fileManager;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.logging.Handler;
+import android.os.Handler;
 
 
 /**
  * Created by lucas on 24/06/15.
  */
-public class DataReader implements Runnable{
-    DataContainer dc;
-    DatabaseHandler db;
-    CheckConnection cc;
-    ClientServer cs;
-    fileManager fm;
-    ScreenUpdater su;
-    GPS gps;
-    Context context;
-    DecimalFormat df;
-    float distance;
-    LinkedList<PavementAux> segment = new LinkedList<PavementAux>();
-    LinkedList<PavementAux> smallSegment = new LinkedList<PavementAux>();
-    LinkedList<Float> lastMeans = new LinkedList<Float>();
-    int smallSegmentPosition = 0;
-    int lastMeansPosition = 0;
-    int trigger = 0;
+public class DataReader{
+    private DataContainer dc = null;
+    private DatabaseHandler db = null;
 
-    PavementAux pavAux;
-    Handler handler;
+    public fileManager fm;
+    public ScreenUpdater su;
+    public Context context;
+    public DecimalFormat df;
+    public Pavement pavAux, repPavement;
+    float  stdv, mean, spdmean, stdvMean, allStdvMean, hPeaksMean, lPeaksMean, magnitude;
+    float lastStdv = 0;
+    Location prev, actual;
+    Handler h;
+
+    float distance, totalDistance, distanceAcc;
+    int databaseSize, usingBuffer, peaksctrl,actualDcCount = 0,lastDcCount = 0, nextIsBlack = 0;
+    int speedCtrl = 10, sameDcCount = 0;
+    static LinkedList<Pavement> segment = new LinkedList<>();
+    static LinkedList<Pavement> pavBuffer = new LinkedList<>();
+    static LinkedList<LinkedList<Float>> lastStdvs = new LinkedList<>();
+    static LinkedList<Float> allLastStdv = new LinkedList<>();
+    static LinkedList<Float> highPeaks = new LinkedList<>();
+    static LinkedList<Float> lowPeaks = new LinkedList<>();
+
+    int processed;
 
     public DataReader(Context context) {
         this.context = context;
-    }
 
-    @Override
-    public void run() {
         dc = DataContainer.getInstance();
         db = DatabaseHandler.getInstance(context);
-        cc = CheckConnection.getInstance(context);
         fm = fileManager.getInstance();
-        gps = GPS.getInstance(context);
         df = new DecimalFormat("0.0000");
 
+        prev = new Location("");
+        prev.setLatitude(0.0);
 
-        Location prev = new Location("");
-        Location actual;
-        actual = null;
         distance = 0;
-        smallSegmentPosition = 0;
-        lastMeansPosition = 0;
-        trigger = 0;
+        totalDistance = 0;
+        processed = 0;
+        databaseSize = 0;
+        usingBuffer = 0;
+        peaksctrl = 0;
+
+        for (int i = 0; i < speedCtrl; i++) {
+            lastStdvs.addLast(new LinkedList<Float>());
+        }
 
 
+        h = new Handler();
+        h.post(r);
 
-        while (true) {
-            if(gps.location != null) {
-                if (dc.getCount() > 0) {
-                    pavAux = dc.getRawData();
-                    if (prev.getLatitude() != 0.0) {
-                        pavAux = DataTreatment.virtualRotation(pavAux);
-                        pavAux.setZ(Math.abs(pavAux.getZ()));
+    }
+
+    Runnable r = new Runnable() {
+        @Override
+        public void run() {
+            if (dc.getCount() > 1) {  //Check if container is not-empty (has something to read)
+                Log.d("DataContainer", "coisas a ser lida");
+                sameDcCount = 0;
+                pavAux = dc.getRawData(); //Get the first pavement from the list
+
+                if(dc.getCount() > 5){
+                    Constants.delayTime = 1;
+                }
+
+                if (pavAux != null) {
+                    processed++;
+
+                    if (processed % 20 == 0 || processed < 50) {
+                        su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                        su.setTask(Constants.UPDATE_UPLOADED);
+                        su.execute("" + processed);
+                    }
+
+                    pavAux = DataTreatment.virtualRotation(pavAux); //Apply virtual rotation
+                    //pavAux.setZ(Math.abs(pavAux.getZ())); //Set to absolute value
 
 
+                    if (prev.getLatitude() == 0.0) { //First case scenarium
 
-                        actual.setLatitude(pavAux.getLat());
-                        actual.setLongitude(pavAux.getLong());
+                        Log.d("DataReader", "First Case scenarium");
+                        prev = pavAux.getLocation();
+                        pavAux.setDistance(0);
+                        segment.addLast(pavAux);   //Add first pavement to the "segment"
+                        lastDcCount = dc.getCount();
 
-                        segment.add(pavAux);
+                    } else { //Not-first case scenarium
 
-                        smallSegment.add(smallSegmentPosition, pavAux);
-                        smallSegmentPosition++;
+                        actual = pavAux.getLocation();
+                        distance = prev.distanceTo(actual);
+                        prev = actual;
 
-                        if(smallSegment.size() == Constants.tempSegmentSize){
-                            Log.d("DataReader", "Entrou!");
+                        totalDistance += distance;
+                        distanceAcc += distance;
 
-                            float mean = DataTreatment.getMean(smallSegment);
+                        pavAux.setDistance(totalDistance);
+                        segment.addLast(pavAux);    //Add not-first pavement to the "segment"
 
-                            float stdv = DataTreatment.getVariance(mean, smallSegment);
+                        if (distanceAcc >= Constants.minDistance) {
+                            distanceAcc = 0;
 
-                            try {
-                                fm.writeToFile(pavAux, mean, stdv);
-                                fm.writeToSQLFile(pavAux);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            mean = DataTreatment.getMean(segment);
+                            stdv = DataTreatment.getDeviation(mean, segment);
+                            spdmean = DataTreatment.getSpeedMean(segment);
 
-                            lastMeans.add(mean);
-                            smallSegment.clear();
+                            repPavement = new Pavement(pavAux, stdv, spdmean, 1);
 
-                            if(lastMeans.size() > 1){
-                                if(checkTrigger(lastMeans)){
-                                    trigger++;
-                                    if(trigger == 2){
-                                        trigger = 0;
-                                        Log.d("DataReader", "TRIGGER!");
+                            allLastStdv.addLast(stdv);
+                            allStdvMean = DataTreatment.getMeanFloat(allLastStdv);
+
+                            if (allLastStdv.size() >= 4) {
+                                allLastStdv.pollFirst();
+
+                                if(spdmean > 70){
+                                    Constants.lowLimit = 1.2;
+                                }else{
+                                    Constants.lowLimit = 0.8;
+                                }
+
+                                if (allStdvMean > 3.0) { //PAVIMENTO HORRIVEL
+
+                                    checkBuffer();
+                                    repPavement.setFlag(3);
+
+                                    Log.d("DataReader", "BAD > 3, valor: " + allStdvMean);
+
+                                    Constants.actualColor = Constants.RED;
+
+                                    su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                    su.setTask(Constants.UPDATE_GPS);
+                                    su.execute("TERRIBLE ROAD");
+
+                                    db.addPavement(repPavement);
+
+                                } else if (allStdvMean <= Constants.lowLimit) { //PAVIMENTO PERFEITO
+
+                                    checkBuffer();
+
+                                    //Constants.peakFactor = 2.0;
+                                    repPavement.setFlag(0);
+
+                                    su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                    su.setTask(Constants.UPDATE_GPS);
+                                    su.execute("SMOOTH ROAD");
+
+                                    Constants.actualColor = Constants.GREEN;
+
+                                    db.addPavement(repPavement);
+
+                                } else {
+
+                                    if (stdv >= lastStdv) {
+                                        if (highPeaks.size() >= 4) {
+
+                                            hPeaksMean = DataTreatment.getMeanFloat(highPeaks);
+
+                                            highPeaks.pollFirst();
+                                        }
+                                        highPeaks.addLast(stdv);
+
+                                    } else {
+                                        if (lowPeaks.size() >= 4) {
+                                            lPeaksMean = DataTreatment.getMeanFloat(lowPeaks);
+
+                                            lowPeaks.pollFirst();
+                                        }
+                                        lowPeaks.addLast(stdv);
                                     }
-                                }else ifgit add{
-                                    trigger = 0;
 
+                                    lastStdv = stdv;
+
+                                    if (hPeaksMean - lPeaksMean >= 2) {  //PAVIMENTO HORRIVEL
+                                        checkBuffer();
+                                        repPavement.setFlag(3);
+
+                                        Log.d("DataReader", "h-p > 1.6, valor: " + (hPeaksMean - lPeaksMean));
+
+                                        Constants.actualColor = Constants.RED;
+
+                                        su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                        su.setTask(Constants.UPDATE_GPS);
+                                        su.execute("TERRIBLE ROAD");
+
+                                        db.addPavement(repPavement);
+
+                                    }else{
+
+                                        if (spdmean <= 20) {
+                                            speedCtrl = 0;
+                                        } else if (spdmean > 20 && spdmean <= 30) {
+                                            speedCtrl = 1;
+                                        } else if (spdmean > 30 && spdmean <= 40) {
+                                            speedCtrl = 2;
+                                        } else if (spdmean > 40 && spdmean <= 50) {
+                                            speedCtrl = 3;
+                                        } else if (spdmean > 50 && spdmean <= 60) {
+                                            speedCtrl = 4;
+                                        } else if (spdmean > 60 && spdmean <= 70) {
+                                            speedCtrl = 5;
+                                        } else if (spdmean > 70 && spdmean <= 80) {
+                                            speedCtrl = 6;
+                                        } else if (spdmean > 80 && spdmean <= 90) {
+                                            speedCtrl = 7;
+                                        } else if (spdmean > 90 && spdmean <= 100) {
+                                            speedCtrl = 8;
+                                        } else if (spdmean > 100) {
+                                            speedCtrl = 9;
+                                        }
+
+
+                                        if (lastStdvs.get(speedCtrl).size() >= 7) { //JA POSSUI LEITURAS SUFICIENTES PARA OBTER MÉDIA
+
+                                            stdvMean = DataTreatment.getMeanFloat(lastStdvs.get(speedCtrl));
+                                            su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                            su.setTask(Constants.UPDATE_GPS);
+                                            su.execute("");
+
+                                            magnitude = stdv / stdvMean;
+                                            Log.d("DataReader", "Magnitude: " + magnitude);
+                                            repPavement.setMagnitude(magnitude);
+
+                                            if (magnitude >= 1.5) { //PICO ENCONTRADO
+                                                repPavement.setFlag(2);
+
+                                                su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                                su.setTask(Constants.UPDATE_GPS);
+                                                su.execute("PEAK DETECTED!");
+
+                                                Log.d("DataReader", "PEAK DETECTED: " + magnitude);
+
+                                                pavBuffer.addLast(repPavement);
+                                                peaksctrl = Constants.peaksCtrl;
+
+                                            } else { //NAO PICO
+                                                //Constants.peakFactor = 1.5;
+                                                repPavement.setFlag(1);
+
+                                                lastStdvs.get(speedCtrl).pollFirst();
+                                                lastStdvs.get(speedCtrl).addLast(stdv);
+
+                                                if (peaksctrl == 0) { //SEM PICOS RECENTES, TRECHO BOM
+
+                                                    db.addPavement(repPavement);
+
+                                                } else if (peaksctrl > 0) { //DENTRO DE ANALISE DE TRECHO
+                                                    pavBuffer.addLast(repPavement);
+                                                    peaksctrl--;
+
+                                                    if (peaksctrl == 0) { //FIM DE TRECHO RUIM OU APENAS PICO SOZINHO
+                                                        checkBuffer();
+                                                    }
+                                                }
+                                            }
+
+                                            if(pavBuffer.size() > Constants.peaksCtrl + 1){
+                                                su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                                su.setTask(Constants.UPDATE_GPS);
+                                                su.execute("BAD ROAD");
+
+                                                Constants.actualColor = Constants.ORANGE;
+                                            }else if(nextIsBlack == 0){
+                                                su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                                su.setTask(Constants.UPDATE_GPS);
+                                                su.execute("NORMAL ROAD");
+
+                                                Constants.actualColor = Constants.YELLOW;
+                                            }
+                                            nextIsBlack = 0;
+
+                                            try {
+                                                if (MainActivity.checkTXT.isChecked()) {
+                                                    Log.d("DataReader", "Escrevendo em arquivo");
+                                                    fm.writeToFile(repPavement);
+                                                    fm.writeToSQLFile(repPavement);
+                                                }
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+
+                                        } else { //PRIMEIRAS LEITURAS - AINDA NAO POSSUI MÉDIA A SER COMPARADA
+                                            lastStdvs.get(speedCtrl).addLast(stdv);
+                                            checkBuffer();
+
+                                            Constants.actualColor = Constants.WHITE;
+                                            Log.d("DataReader", "WHITE FALTA DE LEITURA");
+
+                                            su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+                                            su.setTask(Constants.UPDATE_GPS);
+                                            su.execute("GATHERING NEW SPEED INFO");
+                                        }
+                                    }
                                 }
                             }
-
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            smallSegmentPosition = 0;
-                        }else{
-                            try {
-                                fm.writeToFile(pavAux);
-                                fm.writeToSQLFile(pavAux);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            segment.clear();
                         }
 
-
-                        //distance += prev.distanceTo(actual);
-                        distance += 0.5;
-                        Log.d("DataReader", "Z Value: " + pavAux.getZ());
-                        Log.d("DataReader", "Distance: " + distance);
-
-
-
-                        if(distance >= Constants.minDistance) {
-                            distance = 0;
-
-                            //DataTreatment.getMinsMaxs(segment);
-
-                            float mean = DataTreatment.getMean(segment);
+                        if (Constants.showValues == 1) {
                             su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
-                            su.setTask(Constants.UPDATE_MEDIA);
-                            su.execute(""+df.format(mean));
+                            su.setTask(Constants.UPDATE_DEVMEAN);
+                            su.execute("" + df.format(allStdvMean));
 
-
-                            float dev = DataTreatment.getVariance(mean, segment);
                             su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
                             su.setTask(Constants.UPDATE_STDV);
-                            su.execute(""+df.format(dev));
+                            su.execute("" + df.format(stdv));
 
-                            segment.clear();
-                            try {
-                                Thread.sleep(2000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
                         }
-                        prev = actual;
-                    } else {
 
-                        prev.setLatitude(pavAux.getLat());
-                        prev.setLongitude(pavAux.getLong());
-
-                        segment.add(pavAux);
-
-                        actual = new Location("");
                     }
-                }
-
-            }
-
-
-
-            if (Constants.success == 1) {
-                toDelete();
-                Constants.success = 0;
-            }
-
-           /* if(dc.getRawData().size() > 3 * Constants.RAWLIMIT){
-                Constants.RAWLIMIT = 2 * Constants.RAWLIMIT;
-            }*/
-
-            if (cc.isHaveConnectedMobile() || cc.isHaveConnectedWifi()) {
-
-                if (db.getPavementCount() >= 3 * Constants.DBLIMIT) {
-                    if(Constants.uploadKey == 0) {
-                        Constants.DBLIMIT = 2 * Constants.DBLIMIT;
-                    }
-                }
-
-                if (db.getPavementCount() >= Constants.DBLIMIT) {
-                    // toUpload(Constants.DBLIMIT);
-                }
-
-                if (db.getPavementCount() < Constants.DBLIMIT && Constants.serviceRunning == 0) {
-                    //toUpload(db.getPavementCount());
-                    Constants.DBLIMIT = Constants.defaultDBLIMIT;
-                }
-
-
-            }
-
-            if (dc.getCount() == 0 && Constants.serviceRunning == 0) {
-                if(!(db.getPavementCount() == 0)) {
-                    Constants.DRSLEEP = 1000;
-                    Log.d("DataReader", "Serviço atualizando a cada " + (Constants.DRSLEEP / 1000) + " segundos");
-                }else{
-                    if(Constants.DRSLEEP != 5000) {
-                        su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
-                        su.setTask(Constants.PROCESS_OVER);
-                        su.execute("The processing is over");
-                    }
-                    Constants.DRSLEEP = 5000;
-                    Log.d("DataReader", "Serviço atualizando a cada " + (Constants.DRSLEEP / 1000) + " segundos");
 
                 }
-            }else{
-                Constants.DRSLEEP = 0;
+            } else{
+                Log.d("DataContainer", "nada a ser lido");
+                sameDcCount++;
+                if(sameDcCount > 2 && sameDcCount < 100){
+                    Constants.delayTime++;
+                    Log.d("DataContainer", "delayTime: " + Constants.delayTime);
+                }else if(sameDcCount >= 100){
+                    Constants.delayTime = 1000;
+                }
             }
 
-            try {
-                Thread.sleep(Constants.DRSLEEP);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            su = new ScreenUpdater(context, (ScreenUpdaterInterface) context);
+            su.setTask(Constants.UPDATE_COLOR);
+            su.execute(String.valueOf(Constants.actualColor));
+
+            if(Constants.HALT == 1 && dc.getCount() == 1){
+                stopReading();
+            }else {
+                h.postDelayed(r, Constants.delayTime);
             }
-
-
         }
-    }
+    };
 
-    private Boolean checkTrigger(LinkedList<Float> lastMeans) {
-        float mean1, mean2;
-        mean2 = lastMeans.getLast();
-        mean1 = lastMeans.get(lastMeans.indexOf(lastMeans.getLast()) - 1);
-
-        if(Math.abs(mean2 - mean1) > Math.abs(1.5 * mean1) ){
-            return true;
-        }else{
-            return false;
+    public void stopReading() {
+        Log.d("DataReader", "Stop reading");
+        if(h != null) {
+            h.removeCallbacks(r);
+            h = null;
         }
-    }
-
-
-    private void toDelete() {
-        if(db.getPavementCount() < Constants.DBLIMIT){
-            Log.d("DataReader", "Removendo " + db.getPavementCount() + " linhas do DB. Restante: 0");
-            db.removeRow(db.getPavementCount());
-            Constants.DBLIMIT = Constants.defaultDBLIMIT;
-            Constants.DBEmpty = 1;
-        }else{
-            Log.d("DataReader", "Removendo " + Constants.DBLIMIT + " linhas do DB. Restante: " + (db.getPavementCount() - Constants.DBLIMIT));
-            db.removeRow(Constants.DBLIMIT);
-            Constants.DBEmpty = 0;
-        }
-    }
-
-    private void toUpload(int howMany) {
         try {
-            if (Constants.uploadKey == 0) {
-                Constants.uploadKey = 1;
-                JSONArray jsonObj;
-                jsonObj = db.getMultiplePavements(howMany);
-
-                cs = new ClientServer(jsonObj, howMany, context);
-                cs.execute();
-            }
-
-        } catch (JSONException e) {
+            fm.closeSingleton();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void checkBuffer(){
+        if(pavBuffer.size() > Constants.peaksCtrl + 1){ //FIM DE TRECHO RUIM
+
+            for(Pavement p : pavBuffer){ //SETANDO FLAG DE TODOS PAVEMENTS PARA 2 (RUIM)
+                p.setFlag(2);
+                db.addPavement(p);
+            }
+
+
+        }else if(pavBuffer.size() <= (Constants.peaksCtrl + 1) && pavBuffer.size() > 0){ //APENAS PICO SOZINHO
+            Log.d("DataReader", "PEAK ALONE");
+            for(Pavement p : pavBuffer){ //INSERINDO NO BANCO COMO TRECHO NORMAL
+                if(p.getMagnitude() >= 2.2){
+                    nextIsBlack = 1;
+                    Constants.actualColor = Constants.BLACK;
+                    p.setFlag(4);
+                }
+                db.addPavement(p);
+            }
+        }
+
+        peaksctrl = 0;
+        pavBuffer.clear();
     }
 
 }

@@ -1,0 +1,57 @@
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.805974741321318	, -43.17878007888794	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.806133724521594	, -43.179040253162384	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80645926105501	, -43.17931652069092	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807024532212598	, -43.17899465560913	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80748886058948	, -43.17856550216675	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807650365794178	, -43.178393840789795	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807448484262682	, -43.177664279937744	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807080049807265	, -43.177616000175476	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.806439072762227	, -43.17770719528198	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80544984327795	, -43.17768573760986	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.806131200979973	, -43.17769646644592	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.8057829518524	, -43.1777286529541	);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80440004199599	, -43.1778359413147	);
+
+
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807075002754004 ,-43.1774765253067 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80705481453936 ,-43.177165389060974 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80700434399157 ,-43.176902532577515 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807796729744304 ,-43.178377747535706 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80794309355978, -43.17830801010132  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.808124786384727, -43.17822217941284  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80812983340468, -43.17795395851135  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808109645323913,  -43.17769110202789 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808054128088575,  -43.17749261856079  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808013751905257, -43.17730486392975 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807968328686773,  -43.17702054977417  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.80798851678548,  -43.1767737865448  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808008704881615,  -43.1765753030777 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.808008704881615,  -43.17634463310242  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,  -19.80802889297521, -43.176140785217285 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.808018798928735,  -43.17597985267639  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808044034043707,  -43.17557752132416  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80803898702103,  -43.17579209804535  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.808059175110767,  -43.175395131111145 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,  -19.808109645323913,  -43.175153732299805);
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807660459864035,  -43.17868888378143 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,  -19.80769074206973,  -43.178865909576416 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807710930203665,  -43.1790429353714 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807766447558784,  -43.17919313907623 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807816917864805,  -43.1793487071991 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80786234112652,  -43.17947208881378  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807897670321115,  -43.179606199264526 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.808018798928735,  -43.179670572280884  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80811469234435,  -43.17975103855133  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.807100238018702,  -43.177653551101685  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807100238018702,  -43.17777156829834 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.807100238018702,  -43.177884221076965 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.80713052033104,  -43.17800223827362 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80714061443388,  -43.17809343338013  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.806489543489366,  -43.17750334739685 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.806469355200438,  -43.17735314369202 );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.8064643081278,  -43.17722976207733  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.80645926105501,  -43.1770795583725  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0,-19.806509731775737,  -43.17694008350372  );
+INSERT INTO `pavement` (IRI, latitude, longitude) VALUES (0, -19.806646002641738,  -43.176870346069336 );
+
+

@@ -7,7 +7,6 @@ package com.example.lucas.roadscan.Singleton;
 import android.util.Log;
 
 import com.example.lucas.roadscan.Pavement;
-import com.example.lucas.roadscan.PavementAux;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -19,11 +18,13 @@ import java.util.LinkedList;
 public class DataContainer {
     private static DataContainer singleton = null;
     //private ArrayList<PavementAux> rawData = new ArrayList<PavementAux>();
-    private LinkedList<PavementAux> rawData = new LinkedList<PavementAux>();
+    private static LinkedList<Pavement> rawData;
     // private LinkedList<LinkedList<PavementAux>> splitedRawData = new LinkedList<LinkedList<PavementAux>>();
 
 
-    protected DataContainer(){}
+    protected DataContainer(){
+        rawData = new LinkedList<>();
+    }
 
     public static DataContainer getInstance(){
         if(singleton == null){
@@ -40,16 +41,19 @@ public class DataContainer {
         return null;
     }*/
 
-    public PavementAux getRawData(){
-        return rawData.pollFirst();
+    public Pavement getRawData(){
+        if(getCount() > 0)
+            return rawData.pollFirst();
+        return null;
     }
 
     public int getCount(){
+        Log.d("DataContainer", "DCSize: " + rawData.size());
         return rawData.size();
     }
 
-    public ArrayList<PavementAux> getFirsts(int howMany){
-        ArrayList<PavementAux> auxData = new ArrayList<PavementAux>();
+    public ArrayList<Pavement> getFirsts(int howMany){
+        ArrayList<Pavement> auxData = new ArrayList<Pavement>();
         //Log.d("DataContainer", "Comecou copia");
         for(int i = 0 ; i < howMany ; i++){
             auxData.add(rawData.pollFirst());
@@ -58,10 +62,10 @@ public class DataContainer {
         return auxData;
     }
 
-    public void addData(PavementAux rawPavement){
-        //rawData.add(rawPavement);
-        // Log.d("DataContainer", "ADICIONOU 1 "+rawData.size());
+    public void addData(Pavement rawPavement){
+         Log.d("DataContainer", "ADICIONOU  " +rawData.size() + " " + rawPavement.toString());
         rawData.addLast(rawPavement);
+
     }
 
     public void deleteFirst(){
@@ -78,6 +82,6 @@ public class DataContainer {
             rawData.removeFirst();
         }
 
-        Log.d("DataContainer", "DC count: " + rawData.size());
+       // Log.d("DataContainer", "DC count: " + rawData.size());
     }
 }

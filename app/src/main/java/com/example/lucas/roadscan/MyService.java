@@ -5,73 +5,84 @@ package com.example.lucas.roadscan;
  */
 
 
-        import java.io.IOException;
-        import java.text.DecimalFormat;
-        import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.jar.Manifest;
 
-        import android.app.Service;
-        import android.content.Intent;
-        import android.hardware.Sensor;
-        import android.hardware.SensorEvent;
-        import android.hardware.SensorEventListener;
-        import android.hardware.SensorManager;
-        import android.os.IBinder;
-        import android.text.format.Time;
-        import android.widget.Toast;
+import android.app.Service;
+import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.IBinder;
+import android.util.Log;
 
-        import com.example.lucas.roadscan.Singleton.Constants;
-        import com.example.lucas.roadscan.Singleton.DataContainer;
-        import com.example.lucas.roadscan.Singleton.GPS;
+import com.example.lucas.roadscan.InterfaceUpdate.ScreenUpdater;
+import com.example.lucas.roadscan.InterfaceUpdate.ScreenUpdaterInterface;
+import com.example.lucas.roadscan.Singleton.Constants;
+import com.example.lucas.roadscan.Singleton.DataContainer;
+import com.example.lucas.roadscan.Singleton.GPS;
 
 public class MyService extends Service implements SensorEventListener{
 
 
 
+    // Constants for the low-pass filters
+    private float timeConstant = 0.18f;
+    private float alpha = 0.9f;
+    private float dt = 0;
+
+    // Timestamps for the low-pass filters
+    private float timestamp = System.nanoTime();
+    private float timestampOld = System.nanoTime();
+
     private float X, Y, Z;
-    private float X1, Y1, Z1;
-    private float Xaux, Yaux, Zaux;
-    private float speed, distance;
-    private boolean prevGPSStatus = true;
-    private float[] gravity = {0,0,0} ,  linear_acceleration = {0,0,0};
-    private PavementAux rawPavement;
+    private float[] gravity = new float[] { 0, 0, 0 } ;
+    private float[] linearAcceleration = new float[] { 0, 0, 0 };
+    private int count = 0;
+
+    private Pavement rawPavement;
     private DataContainer dc;
-    //private float[] window = new float[MainActivity.WSIZE];
-    private ArrayList<Float> window = new ArrayList<Float>();
-    private double latitude, longitude, IRI;
     private float R[] = new float[9];
     private float I[] = new float[9];
-    float[] mGravity;
-    float[] mGeomagnetic;
-    float[] mLinear;
-    double azimuth, roll, pitch; // View to draw a compass
-    private int cont = 0, trigger = 0;
-    static int uploadKey = 0;
+    public ScreenUpdater su;
+
+    float[] mGeomagnetic = null;
+    private DateFormat timeFormat;
 
     private SensorManager sensorManager;
-    private Sensor sensorAcc, sensorMag, sensorLin;
-    private GPS gps;
-    public static DatabaseHandler db;
-    private CheckConnection check;
-    private Time now;
+    private Sensor sensorAcc;
+    private Sensor sensorGrav;
+    private Sensor sensorMag;
+    private GPS gps = null;
     DecimalFormat df;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Let it continue running until it is stopped.
-        now 	= new Time();
+        timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+
         dc = DataContainer.getInstance();
         df = new DecimalFormat("0.00000");
-        gps = GPS.getInstance(this);
+        gps = GPS.getInstance();
 
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
 
+        sensorMag = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensorGrav  = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         sensorAcc   = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMag   = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        sensorLin   = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-        sensorManager.registerListener((SensorEventListener) this, sensorAcc, Constants.SensorFrequency);
-        sensorManager.registerListener((SensorEventListener) this, sensorMag, Constants.SensorFrequency);
-        sensorManager.registerListener((SensorEventListener) this, sensorLin, Constants.SensorFrequency);
+        Log.d("SensorService", "Acc: " + sensorAcc);
+        Log.d("SensorService", "Grav: " + sensorGrav);
+        Log.d("SensorService", "Mag: " + sensorMag);
+
+        if(sensorMag != null)
+            sensorManager.registerListener((SensorEventListener) this, sensorMag, SensorManager.SENSOR_DELAY_GAME);
+
+        if(sensorAcc != null)
+            sensorManager.registerListener((SensorEventListener)this, sensorAcc, SensorManager.SENSOR_DELAY_GAME);
 
         return START_STICKY;
     }
@@ -81,44 +92,59 @@ public class MyService extends Service implements SensorEventListener{
         super.onDestroy();
         if(sensorManager != null)
             sensorManager.unregisterListener(this);
-
-        //gps.stopUsingGPS();
-        //db.closeDB();
-
     }
 
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        Log.d("SensorService", "called");
+        Date date = new Date();
 
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             mGeomagnetic = event.values;
         }
 
-        if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-                if(gps.location != null) {
-                    if(dc.getCount() <= 10) {
-                        SensorManager.getRotationMatrix(R, I, event.values, mGeomagnetic);
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            if (Constants.go == 1 && gps.getSpeed() >= Constants.AVGSPEED && Constants.HALT == 0) {
+                Constants.sensorWorking = 1;
+                if(mGeomagnetic != null)
+                    SensorManager.getRotationMatrix(R, I, event.values, mGeomagnetic);
 
-                        X = event.values[0];
-                        Y = event.values[1];
-                        Z = event.values[2];
+                timestamp = System.nanoTime();
 
-                        latitude = gps.getLatitude();
-                        longitude = gps.getLongitude();
+                // Find the sample period (between updates).
+                // Convert from nanoseconds to seconds
+                dt = 1 / (count / ((timestamp - timestampOld) / 1000000000.0f));
+                count++;
 
-                        now.setToNow();
-                        String time = now.format("%H%M%S");
+                alpha = timeConstant / (timeConstant + dt);
 
-                        rawPavement = new PavementAux(R, X, Y, Z, latitude, longitude, time, gps.getDistance());
+                gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+                gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+                gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+
+                linearAcceleration[0] = event.values[0] - gravity[0];
+                linearAcceleration[1] = event.values[1] - gravity[1];
+                linearAcceleration[2] = event.values[2] - gravity[2];
+
+                X = linearAcceleration[0];
+                Y = linearAcceleration[1];
+                Z = linearAcceleration[2];
+
+                if (Constants.StopedMode == 1) {
+                    if (Constants.HALT == 0) {
+                        rawPavement = new Pavement(R, X, Y, Z);
                         dc.addData(rawPavement);
                     }
-                /*if(Constants.treatedCount > 0){
-                    Constants.treatedCount--;
-                    dc.deleteFirst();
-
-                }*/
+                } else {
+                    rawPavement = new Pavement(R, X, Y, Z, gps.getLastLocation(), timeFormat.format(date));
+                    dc.addData(rawPavement);
                 }
+            }else{
+                Constants.actualColor = Constants.WHITE;
+
+                Log.d("DataReader", "WHITE PELO SERVICE");
+            }
         }
     }
 

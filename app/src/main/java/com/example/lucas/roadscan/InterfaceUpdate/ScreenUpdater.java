@@ -44,11 +44,32 @@ public class ScreenUpdater extends AsyncTask<String, Void, String>{
             case Constants.PROCESS_OVER:
                 sui.Toaster(msg);
                 break;
-            case Constants.UPDATE_MEDIA:
-                sui.updateMeanTV(msg);
-                break;
             case Constants.UPDATE_STDV:
                 sui.updateDevTV(msg);
+                break;
+            case Constants.UPDATE_SPD:
+                sui.updateSpeedTV(msg);
+                break;
+            case Constants.UPDATE_DIST:
+                sui.updateDistTV(msg);
+                break;
+            case Constants.UPDATE_COUNT:
+                sui.updateCountTV(msg);
+                break;
+            case Constants.UPDATE_UPLOADED:
+                sui.updateUploadedTV(msg);
+                break;
+            case Constants.UPDATE_GPS:
+                sui.updateGPSTV(msg);
+                break;
+            case Constants.UPDATE_RUN:
+                sui.updateRunning(msg);
+                break;
+            case Constants.UPDATE_DEVMEAN:
+                sui.updateDevMean(msg);
+                break;
+            case Constants.UPDATE_COLOR:
+                sui.updateColor(Integer.parseInt(msg));
                 break;
         }
 
